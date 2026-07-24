@@ -12,6 +12,12 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
 const GHOST_SPEED = 0.1;    // 1/10 celda/frame
+const GHOSTS_SETUP = [
+  { x: 13, y: 14, kind: 'hunter', scatterTarget: { x: 27, y: 0 } },
+  { x: 14, y: 14, kind: 'ambusher', scatterTarget: { x: 0, y: 0 } },
+  { x: 12, y: 14, kind: 'trickster', scatterTarget: { x: 27, y: 30 } },
+  { x: 15, y: 14, kind: 'shy', scatterTarget: { x: 0, y: 30 } },
+];
 
 // Crea una partida nueva. Copia MAZE (pristino) a game.grid para poder comer
 // dots sin destruir el original, y reiniciar.
@@ -29,6 +35,8 @@ function createGame() {
     lives: 3,
     dotsRemaining: dots,
     grid,
+    mode: 'scatter',
+    modeTimer: 0,
     pacman: {
       x: PACMAN_START.x,
       y: PACMAN_START.y,
@@ -36,12 +44,13 @@ function createGame() {
       nextDir: null,
       speed: PACMAN_SPEED,
     },
-    ghosts: GHOST_STARTS.map( ( g ) => ( {
+    ghosts: GHOSTS_SETUP.map( ( g ) => ( {
       x: g.x,
       y: g.y,
       dir: 'up',
       speed: GHOST_SPEED,
       kind: g.kind,
+      scatterTarget: { x: g.scatterTarget.x, y: g.scatterTarget.y },
     } ) ),
   };
 }
@@ -164,9 +173,11 @@ function resetPositions( game ) {
   p.y = PACMAN_START.y;
   p.dir = 'left';
   p.nextDir = null;
+  game.mode = 'scatter';
+  game.modeTimer = 0;
   game.ghosts.forEach( ( g, i ) => {
-    g.x = GHOST_STARTS[ i ].x;
-    g.y = GHOST_STARTS[ i ].y;
+    g.x = GHOSTS_SETUP[ i ].x;
+    g.y = GHOSTS_SETUP[ i ].y;
     g.dir = 'up';
   } );
 }
