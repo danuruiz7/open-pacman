@@ -103,6 +103,17 @@ function getHunterGhost( ghosts ) {
   return ghosts.find( ( ghost ) => ghost.kind === 'hunter' ) || ghosts[ 0 ];
 }
 
+function getScatterTarget( g ) {
+  return { x: g.scatterTarget.x, y: g.scatterTarget.y };
+}
+
+function getShyTarget( g, pacmanCell ) {
+  const gx = Math.round( g.x );
+  const gy = Math.round( g.y );
+  const dist = Math.hypot( pacmanCell.x - gx, pacmanCell.y - gy );
+  return dist > 8 ? pacmanCell : getScatterTarget( g );
+}
+
 function getChaseTarget( game, g ) {
   const pacmanCell = { x: Math.round( game.pacman.x ), y: Math.round( game.pacman.y ) };
 
@@ -124,17 +135,14 @@ function getChaseTarget( game, g ) {
   }
 
   if ( g.kind === 'shy' ) {
-    const gx = Math.round( g.x );
-    const gy = Math.round( g.y );
-    const dist = Math.hypot( pacmanCell.x - gx, pacmanCell.y - gy );
-    return dist > 8 ? pacmanCell : g.scatterTarget;
+    return getShyTarget( g, pacmanCell );
   }
 
   return pacmanCell;
 }
 
 function getGhostTarget( game, g ) {
-  if ( game.mode === 'scatter' ) return g.scatterTarget;
+  if ( game.mode === 'scatter' ) return getScatterTarget( g );
   return getChaseTarget( game, g );
 }
 
