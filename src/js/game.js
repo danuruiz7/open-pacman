@@ -12,6 +12,8 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
 const GHOST_SPEED = 0.1;    // 1/10 celda/frame
+const SCATTER_DURATION = 7 * 60;
+const CHASE_DURATION = 20 * 60;
 const GHOSTS_SETUP = [
   { x: 13, y: 14, kind: 'hunter', scatterTarget: { x: 27, y: 0 } },
   { x: 14, y: 14, kind: 'ambusher', scatterTarget: { x: 0, y: 0 } },
@@ -131,6 +133,20 @@ function getChaseTarget( game, g ) {
   return pacmanCell;
 }
 
+function getGhostTarget( game, g ) {
+  if ( game.mode === 'scatter' ) return g.scatterTarget;
+  return getChaseTarget( game, g );
+}
+
+function updateGhostMode( game ) {
+  game.modeTimer++;
+  const duration = game.mode === 'scatter' ? SCATTER_DURATION : CHASE_DURATION;
+  if ( game.modeTimer < duration ) return;
+
+  game.mode = game.mode === 'scatter' ? 'chase' : 'scatter';
+  game.modeTimer = 0;
+}
+
 function movePacman( game ) {
   const p = game.pacman;
   const grid = game.grid;
@@ -163,7 +179,7 @@ function movePacman( game ) {
 
 function decideGhost( game, g ) {
   const grid = game.grid;
-  const target = getChaseTarget( game, g );
+  const target = getGhostTarget( game, g );
 
   const options = Object.keys( DIRS ).filter(
     ( dir ) => dir !== OPPOSITE[ g.dir ] && canMove( grid, g.x, g.y, dir, 'ghost' )
@@ -224,6 +240,7 @@ function collides( a, b ) {
 }
 
 function update( game ) {
+  updateGhostMode( game );
   movePacman( game );
   game.ghosts.forEach( ( g ) => moveGhost( game, g ) );
 
