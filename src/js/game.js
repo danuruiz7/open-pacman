@@ -155,6 +155,27 @@ function updateGhostMode( game ) {
   game.modeTimer = 0;
 }
 
+function getGhostChoices( grid, x, y, dir ) {
+  const options = Object.keys( DIRS ).filter(
+    ( nextDir ) => nextDir !== OPPOSITE[ dir ] && canMove( grid, x, y, nextDir, 'ghost' )
+  );
+
+  return options.length ? options : [ '' + OPPOSITE[ dir ] ];
+}
+
+function getNextGhostCell( grid, x, y, dir ) {
+  const d = DIRS[ dir ];
+  let nx = x + d.x;
+  const ny = y + d.y;
+
+  if ( ny === TUNNEL_ROW ) {
+    if ( nx < 0 ) nx = grid[ 0 ].length - 1;
+    else if ( nx >= grid[ 0 ].length ) nx = 0;
+  }
+
+  return { x: nx, y: ny };
+}
+
 function movePacman( game ) {
   const p = game.pacman;
   const grid = game.grid;
@@ -188,20 +209,15 @@ function movePacman( game ) {
 function decideGhost( game, g ) {
   const grid = game.grid;
   const target = getGhostTarget( game, g );
-
-  const options = Object.keys( DIRS ).filter(
-    ( dir ) => dir !== OPPOSITE[ g.dir ] && canMove( grid, g.x, g.y, dir, 'ghost' )
-  );
-  // Sin salida (callejon): permitir el giro de 180.
-  const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
+  const gx = Math.round( g.x );
+  const gy = Math.round( g.y );
+  const choices = getGhostChoices( grid, gx, gy, g.dir );
 
   let best = choices[ 0 ];
   let bestDist = Infinity;
   for ( const dir of choices ) {
-    const d = DIRS[ dir ];
-    const nx = g.x + d.x;
-    const ny = g.y + d.y;
-    const dist = Math.abs( nx - target.x ) + Math.abs( ny - target.y );
+    const next = getNextGhostCell( grid, gx, gy, dir );
+    const dist = Math.abs( next.x - target.x ) + Math.abs( next.y - target.y );
     if ( dist < bestDist ) {
       bestDist = dist;
       best = dir;
